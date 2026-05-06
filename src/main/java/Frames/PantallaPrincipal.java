@@ -1,4 +1,4 @@
-package Frames1;
+package Frames;
 
 public class PantallaPrincipal {
 }
