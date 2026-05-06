@@ -20,16 +20,16 @@ public class maincito {
             prueba.conectar();
 
             //variables para no tener que ir uno a uno
-			/*int id_Atraccion;
+			int id_Atraccion;
             String nombre = "Papitos";
-			String categoria = "Familiar";
+			String categoria = "Moderada";
             String Estado = "A";
             int Duracion = 5;
-            Boolean FotoRide = true;
+            int FotoRide = 1;
 			//dentro de los parentesis le damos la sentencia para insertarla
-			String sentencia = "INSERT INTO EMPLEADOS (Nombre, Categoria, Estado, Duracion_Minutos, FotoRide) VALUES ('"+nombre+"', "+categoria+", "+Estado+", "+Duracion+", "+FotoRide+")";
+			String sentencia = "INSERT INTO atracciones (Nombre, Categoria, Estado, Duracion_Minutos, FotoRide) VALUES ('"+nombre+"', '"+categoria+"', '"+Estado+"', '"+Duracion+"', '"+FotoRide+"')";
 			prueba.ejecutarInsertDeleteUpdate(sentencia);
-            */
+
 
 
 
