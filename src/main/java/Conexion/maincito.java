@@ -10,9 +10,6 @@ public class maincito {
 
         //creamos el objeto de la clase para usarlo
         //ConexionMySQL x = new ConexionMySQL("root","","dam");
-
-
-
         Scanner sr = new Scanner(System.in);
 
         ConexionMySQL prueba = new ConexionMySQL("root","","HotelM&L");
