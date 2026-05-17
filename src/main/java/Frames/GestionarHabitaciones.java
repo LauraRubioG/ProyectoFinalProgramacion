@@ -133,7 +133,7 @@ public class GestionarHabitaciones { // Inicio de la clase
                     geshaEstadoW.setText(modeloTabla.getValueAt(filaSeleccionada, 4).toString());
                 }
             }
-        });
+        } );
         */
 
         //
