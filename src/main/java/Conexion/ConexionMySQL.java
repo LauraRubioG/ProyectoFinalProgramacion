@@ -1,114 +1,112 @@
-package Conexion;
+package Conexion; // Indica que esta clase pertenece al paquete "Conexion", para organizar el código de base de datos
 
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
-import java.util.Calendar;
-import java.util.TimeZone;
+import java.sql.Connection; // Importa la interfaz para representar una conexión con la base de datos
+import java.sql.DriverManager; // Importa la clase para gestionar los drivers de la base de datos
+import java.sql.ResultSet; // Importa la interfaz para manejar los resultados de una consulta SELECT
+import java.sql.SQLException; // Importa la clase para manejar los errores específicos de SQL
+import java.sql.Statement; // Importa la interfaz para ejecutar sentencias SQL
+import java.util.Calendar; // Importa la clase para trabajar con fechas y horas
+import java.util.TimeZone; // Importa la clase para manejar las zonas horarias
 
-/**
- * Clase para la conexión con una base de datos MySQL
- *
- * @author Francisco Jesús Delgado Almirón
- */
-public class ConexionMySQL {
+// Esta clase contiene todas las herramientas necesarias para conectar
+// nuestra aplicación de Java con una base de datos MySQL
+public class ConexionMySQL { // Define el inicio de nuestra clase
 
-    // Base de datos a la que nos conectamos
-    private String BD;
-    // Usuario de la base de datos
-    private String USUARIO;
-    // Contraseña del usuario de la base de datos
-    private String PASS;
-    // Objeto donde se almacenará nuestra conexión
-    private Connection connection;
-    // Indica que está en localhost
-    private String HOST;
-    // Zona horaria
-    private TimeZone zonahoraria;
+    //
+    // VARIABLES DE CONEXIÓN
+    //
+    // Aquí se guardan los datos necesarios para establecer la conexión
 
-    /**
-     * Constructor de la clase
-     *
-     * @param usuario Usuario de la base de datos
-     * @param pass Contraseña del usuario
-     * @param bd Base de datos a la que nos conectamos
-     */
-    public ConexionMySQL(String usuario, String pass, String bd) {
-        HOST = "localhost";
-        USUARIO = usuario;
-        PASS = pass;
-        BD = bd;
-        connection = null;
-    }
+    private String BD; // Declara una variable para guardar el nombre de la base de datos
+    private String USUARIO; // Declara una variable para guardar el nombre de usuario
+    private String PASS; // Declara una variable para guardar la contraseña
+    private Connection connection; // Declara un objeto que representará la conexión activa
+    private String HOST; // Declara una variable para guardar la dirección del servidor
+    private TimeZone zonahoraria; // Declara una variable para guardar la zona horaria
 
-    /**
-     * Comprueba que el driver de MySQL esté correctamente integrado
-     *
-     * @throws SQLException Se lanzará cuando haya un fallo con la base de datos
-     */
-    private void registrarDriver() throws SQLException {
-        try {
-            Class.forName("com.mysql.cj.jdbc.Driver");
-        } catch (ClassNotFoundException e) {
-            throw new SQLException("Error al conectar con MySQL: " + e.getMessage());
-        }
-    }
+    //
+    // CONSTRUCTOR DE LA CLASE
+    //
+    // Se ejecuta cuando creamos un nuevo objeto de tipo "ConexionMySQL"
+    public ConexionMySQL(String usuario, String pass, String bd) { // Define el constructor y sus parámetros
+        this.HOST = "localhost"; // Asigna "localhost" a la variable HOST
+        this.USUARIO = usuario; // Asigna el parámetro "usuario" a la variable de la clase
+        this.PASS = pass; // Asigna el parámetro "pass" a la variable de la clase
+        this.BD = bd; // Asigna el parámetro "bd" a la variable de la clase
+        this.connection = null; // Inicializa la conexión a null para indicar que no estamos conectados
+    } // Cierra el constructor
 
-    /**
-     * Conecta con la base de datos
-     *
-     * @throws SQLException Se lanzará cuando haya un fallo con la base de datos
-     */
-    public void conectar() throws SQLException {
-        if (connection == null || connection.isClosed()) {
-            registrarDriver();
-            // Obtengo la zona horaria
-            Calendar now = Calendar.getInstance();
-            zonahoraria = now.getTimeZone();
-            connection = (Connection) DriverManager.getConnection("jdbc:mysql://" + HOST + "/" + BD + "?user="
-                    + USUARIO + "&password=" + PASS + "&useLegacyDatetimeCode=false&serverTimezone="
-                    + zonahoraria.getID());
-        }
-    }
+    //
+    // MÉTODO PARA REGISTRAR EL DRIVER
+    //
+    // Este método se asegura de que la aplicación tiene disponible el "traductor" (driver JDBC)
+    private void registrarDriver() throws SQLException { // Define el método, que puede lanzar un error de SQL
+        try { // Inicia un bloque para manejar posibles errores
+            // Intenta encontrar la clase del driver de MySQL, que es el "traductor"
+            Class.forName("com.mysql.cj.jdbc.Driver"); // Carga la clase del driver en memoria
+        } catch (ClassNotFoundException e) { // Si no encuentra la clase
+            // Lanza un nuevo error de SQL indicando que falta el driver
+            throw new SQLException("Error al conectar con MySQL: No se encontró el driver " + e.getMessage());
+        } // Cierra el bloque try-catch
+    } // Cierra el método registrarDriver
 
-    /**
-     * Cierra la conexión con la base de datos
-     *
-     * @throws SQLException Se lanzará cuando haya un fallo con la base de datos
-     */
-    public void desconectar() throws SQLException {
-        if (connection != null && !connection.isClosed()) {
-            connection.close();
-        }
-    }
+    //
+    // MÉTODO PARA CONECTAR CON LA BASE DE DATOS
+    //
+    // Este es el método principal para establecer la comunicación
+    public void conectar() throws SQLException { // Define el método, que puede lanzar un error de SQL
+        // ¿No hay conexión o la conexión está cerrada?
+        if (connection == null || connection.isClosed()) { // Comprueba el estado de la conexión
+            // Si es así, se procede a conectar
 
-    /**
-     * Ejecuta una consulta SELECT
-     *
-     * @param consulta Consulta SELECT a ejecutar
-     * @return Resultado de la consulta
-     * @throws SQLException Se lanzará cuando haya un fallo con la base de datos
-     */
-    public ResultSet ejecutarSelect(String consulta) throws SQLException {
-        Statement stmt = connection.createStatement();
-        ResultSet rset = stmt.executeQuery(consulta);
+            // 1. Se registra el driver
+            this.registrarDriver(); // Llama al método para asegurarse de que el driver está disponible
+            
+            // 2. Se obtiene la zona horaria del sistema para la conexión
+            Calendar now = Calendar.getInstance(); // Obtiene la fecha y hora actuales
+            this.zonahoraria = now.getTimeZone(); // Extrae la zona horaria de esa fecha
+            
+            // 3. Se establece la conexión usando el DriverManager de JDBC
+            //    Se le pasa una URL de conexión con todos los datos necesarios
+            this.connection = (Connection) DriverManager.getConnection("jdbc:mysql://" + this.HOST + "/" + this.BD + "?user="
+                    + this.USUARIO + "&password=" + this.PASS + "&useLegacyDatetimeCode=false&serverTimezone="
+                    + this.zonahoraria.getID());
+        } // Cierra el bloque if
+    } // Cierra el método conectar
 
-        return rset;
-    }
+    //
+    // MÉTODO PARA DESCONECTAR DE LA BASE DE DATOS
+    //
+    // Es muy importante cerrar la conexión para liberar recursos
+    public void desconectar() throws SQLException { // Define el método, que puede lanzar un error de SQL
+        // ¿Hay una conexión y está abierta?
+        if (this.connection != null && !this.connection.isClosed()) { // Comprueba el estado de la conexión
+            // Si es así, se cierra
+            this.connection.close(); // Cierra la conexión
+        } // Cierra el bloque if
+    } // Cierra el método desconectar
 
-    /**
-     * Ejecuta una consulta INSERT, DELETE o UPDATE
-     *
-     * @param consulta Consulta INSERT, DELETE o UPDATE a ejecutar
-     * @return Cantidad de filas afectadas
-     * @throws SQLException Se lanzará cuando haya un fallo con la base de datos
-     */
-    public int ejecutarInsertDeleteUpdate(String consulta) throws SQLException {
-        Statement stmt = connection.createStatement();
-        int fila = stmt.executeUpdate(consulta);
+    //
+    // MÉTODO PARA EJECUTAR CONSULTAS DE SELECCIÓN (SELECT)
+    //
+    // Sirve para obtener datos de la base de datos
+    public ResultSet ejecutarSelect(String consulta) throws SQLException { // Define el método y el tipo de dato que devuelve
+        // Se crea un objeto "Statement", que es el encargado de ejecutar la consulta
+        Statement stmt = this.connection.createStatement(); // Crea el objeto Statement
+        // Se ejecuta la consulta SELECT y se devuelve el conjunto de resultados (ResultSet)
+        ResultSet rset = stmt.executeQuery(consulta); // Ejecuta la consulta y guarda el resultado
+        return rset; // Devuelve el resultado obtenido
+    } // Cierra el método ejecutarSelect
 
-        return fila;
-    }
-}
+    //
+    // MÉTODO PARA EJECUTAR CONSULTAS DE MODIFICACIÓN (INSERT, DELETE, UPDATE)
+    //
+    // Sirve para cambiar datos en la base de datos
+    public int ejecutarInsertDeleteUpdate(String consulta) throws SQLException { // Define el método y el tipo de dato que devuelve
+        // Se crea el objeto "Statement"
+        Statement stmt = this.connection.createStatement(); // Crea el objeto Statement
+        // Se ejecuta la consulta de modificación. Este método devuelve el número de filas afectadas
+        int fila = stmt.executeUpdate(consulta); // Ejecuta la consulta y guarda el número de filas
+        return fila; // Devuelve el número de filas afectadas
+    } // Cierra el método ejecutarInsertDeleteUpdate
+} // Cierra la clase ConexionMySQL

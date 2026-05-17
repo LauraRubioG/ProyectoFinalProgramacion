@@ -1,36 +1,61 @@
-package Frames;
+package Frames; // Indica que esta clase pertenece al paquete "Frames", que organiza nuestras ventanas
 
-import javax.swing.*;
-import java.awt.*;
+import javax.swing.*; // Importa todas las clases de Swing para crear las interfaces gráficas
+import java.awt.event.ActionEvent; // Importa la clase que representa un evento, como hacer clic en un botón
+import java.awt.event.ActionListener; // Importa la interfaz que nos permite "escuchar" y responder a esos eventos
 
-public class mainFrame {
-    // Este es el método principal, el motor de arranque que Java busca para iniciar
-    public static void main(String[] args) {
+// Esta clase gestiona la ventana principal de la aplicación,
+// que es el menú que aparece después de que un usuario inicia sesión correctamente
+public class mainFrame { // Define el inicio de nuestra clase
 
-        // 1. Creamos una ventana de Windows/Mac vacía y le ponemos un título en la barra superior
-        JFrame ventana = new JFrame("Login");
+    //
+    // DECLARACIÓN DE COMPONENTES VISUALES
+    //
+    // Estas variables conectan el código con los botones del menú principal
+    public JPanel panelMain; // Declara el panel principal que sirve de contenedor
+    private JButton btnGestionClientes; // Declara una variable para el botón de gestionar clientes
+    private JButton btnGestionHabitaciones; // Declara una variable para el botón de gestionar habitaciones
+    private JButton btnGestionReservas; // Declara una variable para el botón de gestionar reservas
+    private JButton btnCheckIn; // Declara una variable para el botón de check-in
 
-        // 2. Le decimos a la ventana vacía: "Tu contenido interior va a ser el 'panelPrincipal' que diseñé"
-        // Creamos una nueva PantallaLogin() para poder acceder a ese panel
-        ventana.setContentPane(new LoginPage().pantallaLogin);
+    //
+    // CONSTRUCTOR DE LA CLASE
+    //
+    // Aquí se define el comportamiento de cada uno de los botones del menú
+    public mainFrame() { // Define el inicio del constructor
 
-        // 3. Le decimos que cuando el usuario cierre la ventana con la "X", el programa se apague completamente
-        ventana.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        // Le asignamos una tarea al botón de "Gestionar Clientes"
+        btnGestionClientes.addActionListener(new ActionListener() { // Asigna un "oyente" de acciones al botón
+            @Override // Indica que estamos sobrescribiendo un método
+            public void actionPerformed(ActionEvent e) { // Define el método que se ejecutará con el clic
+                // Como esta parte de la aplicación todavía no está construida,
+                // de momento solo mostramos un aviso al usuario
+                JOptionPane.showMessageDialog(panelMain, "Funcionalidad en desarrollo", "Aviso", JOptionPane.INFORMATION_MESSAGE);
+            } // Cierra el método actionPerformed
+        }); // Cierra la definición del ActionListener
 
-        // 4. ventana.pack() es un truco buenísimo: hace que la ventana se encoja o estire
-        // automáticamente para ajustarse al tamaño exacto de los botones y textos que pusiste
-        ventana.pack();
+        // Hacemos lo mismo para el botón de "Gestionar Habitaciones"
+        btnGestionHabitaciones.addActionListener(new ActionListener() { // Asigna un "oyente" de acciones al botón
+            @Override // Indica que estamos sobrescribiendo un método
+            public void actionPerformed(ActionEvent e) { // Define el método que se ejecutará con el clic
+                JOptionPane.showMessageDialog(panelMain, "Funcionalidad en desarrollo", "Aviso", JOptionPane.INFORMATION_MESSAGE);
+            } // Cierra el método actionPerformed
+        }); // Cierra la definición del ActionListener
 
-        // 5. Centramos la ventana justo en el medio del monitor del ordenador
-        ventana.setLocationRelativeTo(null);
+        // Y para el botón de "Gestionar Reservas"
+        btnGestionReservas.addActionListener(new ActionListener() { // Asigna un "oyente" de acciones al botón
+            @Override // Indica que estamos sobrescribiendo un método
+            public void actionPerformed(ActionEvent e) { // Define el método que se ejecutará con el clic
+                JOptionPane.showMessageDialog(panelMain, "Funcionalidad en desarrollo", "Aviso", JOptionPane.INFORMATION_MESSAGE);
+            } // Cierra el método actionPerformed
+        }); // Cierra la definición del ActionListener
 
-        // 6. ¡Encendemos las luces! Hacemos que la ventana sea visible para el usuario
-        ventana.setVisible(true);
-    }
-
-}
-
-
-
-
-
+        // Y finalmente, para el botón de "Realizar Check-in"
+        btnCheckIn.addActionListener(new ActionListener() { // Asigna un "oyente" de acciones al botón
+            @Override // Indica que estamos sobrescribiendo un método
+            public void actionPerformed(ActionEvent e) { // Define el método que se ejecutará con el clic
+                JOptionPane.showMessageDialog(panelMain, "Funcionalidad en desarrollo", "Aviso", JOptionPane.INFORMATION_MESSAGE);
+            } // Cierra el método actionPerformed
+        }); // Cierra la definición del ActionListener
+    } // Cierra el constructor de la clase
+} // Cierra la clase mainFrame
