@@ -1,290 +1,401 @@
-package Frames; // Indica el paquete donde se encuentra la clase
-
-import Conexion.ConexionMySQL; // Importamos nuestra clase de conexión para interactuar con la base de datos
-
-import javax.swing.*; // Importa todas las clases de Swing para la interfaz gráfica
-import javax.swing.table.DefaultTableModel; // Para gestionar los datos de nuestra tabla
-import java.awt.event.ActionEvent; // Para los eventos de clic
-import java.awt.event.ActionListener; // Interfaz para escuchar los clics
-import java.sql.SQLException; // Para manejar errores de base de datos
+// La primera línea de un archivo Java siempre define a qué "paquete" o carpeta pertenece la clase.
+package Frames;
 
 //
-// CLASE PARA GESTIONAR LAS HABITACIONES
+// ZONA DE IMPORTACIONES
 //
-// Esta clase maneja la ventana donde el usuario podrá ver, añadir,
-// modificar o eliminar habitaciones de la base de datos.
-public class GestionarHabitaciones { // Inicio de la clase
+import Conexion.ConexionMySQL;
+import javax.swing.*;
+import javax.swing.event.ListSelectionEvent;
+import javax.swing.event.ListSelectionListener;
+import javax.swing.table.DefaultTableModel;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+
+// Esta clase define todo el comportamiento y la lógica de nuestra ventana de gestión de habitaciones.
+public class GestionarHabitaciones {
 
     //
-    // COMPONENTES DE LA INTERFAZ
+    // DECLARACIÓN DE COMPONENTES VISUALES (ATRIBUTOS DE LA CLASE)
     //
-    public JPanel panelGesHab; // Panel principal de la ventana
-    private JTextField geshaNombreW; // Campo de texto para el número/nombre de la habitación
-    private JComboBox<String> geshaTipoCo; // Desplegable para seleccionar el tipo de habitación (Basic, Suit, Queen)
-    private JTextField geshaPrecioW; // Campo de texto para el precio por noche
-    private JTextField geshaEstadoW; // Campo de texto para el estado (ej. Disponible, Ocupada)
-    private JButton geshabtnRegistrarHabitacion; // Botón para registrar la habitación (lo cambiaremos a Añadir)
-    
-    // Estos componentes tendrás que añadirlos tú mismo en el GUI Designer:
-    // private JButton btnModificar; // Botón para modificar una habitación seleccionada
-    // private JButton btnEliminar; // Botón para eliminar una habitación
-    // private JTable tablaHabitaciones; // Tabla para mostrar todas las habitaciones
-    // private DefaultTableModel modeloTabla; // Modelo que contiene los datos de la tabla
+    public JPanel panelGesHab;
+    private JTextField habNumeroHabW;
+    private JComboBox<String> habTipoW;
+    private JTextField habPrecioW;
+    private JComboBox<String> habEstadoW;
+    private JButton habBtnGuardar;
+    private JButton habBtnNuevo;
+    private JButton habBtnEliminar;
+    private JTable habTablaHabitaciones;
+
+    private DefaultTableModel tableModel;
+
+    private boolean modoNuevaHabitacion = false;
 
     //
     // CONSTRUCTOR DE LA CLASE
     //
     public GestionarHabitaciones() {
         
-        //
-        // CONFIGURACIÓN INICIAL DEL DESPLEGABLE (COMBOBOX)
-        //
-        // Rellenamos el desplegable con las opciones que nos has indicado
-        geshaTipoCo.addItem("Selecciona un tipo..."); // Opción por defecto
-        geshaTipoCo.addItem("Basic");
-        geshaTipoCo.addItem("Suit");
-        geshaTipoCo.addItem("Queen");
-
-        //
-        // CONFIGURACIÓN INICIAL DE LA TABLA
-        //
-        // Creamos las columnas que tendrá nuestra tabla
-        // modeloTabla = new DefaultTableModel();
-        // modeloTabla.addColumn("ID");
-        // modeloTabla.addColumn("Número/Nombre");
-        // modeloTabla.addColumn("Tipo");
-        // modeloTabla.addColumn("Precio");
-        // modeloTabla.addColumn("Estado");
-        // tablaHabitaciones.setModel(modeloTabla); // <-- DESCOMENTAR ESTO CUANDO AÑADAS LA TABLA EN EL DISEÑADOR
-
-        // Llenamos la tabla con los datos que ya existen en la base de datos
-        // cargarHabitaciones(); // <-- DESCOMENTAR ESTO CUANDO LA BASE DE DATOS TENGA LA TABLA CREADA
-
-        //
-        // ACCIÓN DEL BOTÓN: AÑADIR/REGISTRAR HABITACIÓN
-        //
-        geshabtnRegistrarHabitacion.addActionListener(e -> {
-            // Obtenemos los valores de los campos de texto
-            String numero = geshaNombreW.getText().trim();
-            String tipo = (String) geshaTipoCo.getSelectedItem();
-            String precioStr = geshaPrecioW.getText().trim();
-            String estado = geshaEstadoW.getText().trim();
-
-            // Validamos que ningún campo esté vacío
-            if (numero.isEmpty() || (tipo != null && tipo.equals("Selecciona un tipo...")) || precioStr.isEmpty() || estado.isEmpty()) {
-                JOptionPane.showMessageDialog(panelGesHab, "Por favor, rellene todos los campos.", "Campos vacíos", JOptionPane.WARNING_MESSAGE);
-                return; // Detenemos la ejecución si hay campos vacíos
-            }
-
-            try {
-                // Validamos que el precio sea un número válido
-                double precio = Double.parseDouble(precioStr);
-
-                // 1. Creamos la conexión a la base de datos
-                ConexionMySQL conexion = new ConexionMySQL("root", "", "HotelM&L");
-                conexion.conectar(); // Abrimos la conexión
-
-                // 2. Preparamos la consulta SQL para insertar los datos
-                // (Asumiendo que tu tabla en MySQL se llama 'habitaciones')
-                String consulta = "INSERT INTO habitaciones (numero, tipo, precio, estado) VALUES ('" + numero + "', '" + tipo + "', " + precio + ", '" + estado + "')";
-
-                // 3. Ejecutamos la consulta
-                int filasAfectadas = conexion.ejecutarInsertDeleteUpdate(consulta);
-
-                // 4. Verificamos si se guardó correctamente
-                if (filasAfectadas > 0) {
-                    JOptionPane.showMessageDialog(panelGesHab, "Habitación registrada correctamente.");
-                    limpiarCampos(); // Limpiamos los campos de texto para poder añadir otra
-                    // cargarHabitaciones(); // <-- DESCOMENTAR PARA ACTUALIZAR LA TABLA
-                } else {
-                    JOptionPane.showMessageDialog(panelGesHab, "No se pudo registrar la habitación.", "Error", JOptionPane.ERROR_MESSAGE);
-                }
-
-                // 5. IMPORTANTE: Cerramos la conexión
-                conexion.desconectar();
-
-            } catch (NumberFormatException ex) {
-                // Si el usuario introduce letras en el campo de precio
-                JOptionPane.showMessageDialog(panelGesHab, "El precio debe ser un número válido.", "Error de formato", JOptionPane.ERROR_MESSAGE);
-            } catch (SQLException ex) {
-                // Si hay un error con la base de datos
-                JOptionPane.showMessageDialog(panelGesHab, "Error en la base de datos: " + ex.getMessage(), "Error SQL", JOptionPane.ERROR_MESSAGE);
-            }
-        });
-
-        //
-        // EVENTO: HACER CLIC EN UNA FILA DE LA TABLA
-        //
-        // Esto servirá para cargar los datos de la habitación seleccionada en los campos de texto
-        /* <-- DESCOMENTAR TODO ESTE BLOQUE CUANDO TENGAS LA TABLA
-        tablaHabitaciones.addMouseListener(new java.awt.event.MouseAdapter() {
-            @Override
-            public void mouseClicked(java.awt.event.MouseEvent e) {
-                // Obtenemos la fila que el usuario ha seleccionado
-                int filaSeleccionada = tablaHabitaciones.getSelectedRow();
-                
-                // Verificamos que realmente se haya seleccionado una fila
-                if (filaSeleccionada >= 0) {
-                    // Obtenemos los valores de las celdas de esa fila y los ponemos en los campos de texto
-                    // Suponiendo las columnas: ID(0), Numero(1), Tipo(2), Precio(3), Estado(4)
-                    geshaNombreW.setText(modeloTabla.getValueAt(filaSeleccionada, 1).toString());
-                    geshaTipoCo.setSelectedItem(modeloTabla.getValueAt(filaSeleccionada, 2).toString());
-                    geshaPrecioW.setText(modeloTabla.getValueAt(filaSeleccionada, 3).toString());
-                    geshaEstadoW.setText(modeloTabla.getValueAt(filaSeleccionada, 4).toString());
-                }
-            }
-        } );
-        */
-
-        //
-        // ACCIÓN DEL BOTÓN: MODIFICAR HABITACIÓN
-        //
-        /* <-- DESCOMENTAR TODO ESTE BLOQUE CUANDO AÑADAS EL BOTÓN EN EL DISEÑADOR
-        btnModificar.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                // Primero, verificamos si el usuario ha seleccionado alguna fila de la tabla
-                int filaSeleccionada = tablaHabitaciones.getSelectedRow();
-                
-                if (filaSeleccionada >= 0) {
-                    // Obtenemos los nuevos valores de los campos de texto
-                    String numero = geshaNombreW.getText().trim();
-                    String tipo = (String) geshaTipoCo.getSelectedItem();
-                    String precioStr = geshaPrecioW.getText().trim();
-                    String estado = geshaEstadoW.getText().trim();
-                    
-                    // Obtenemos el ID de la habitación seleccionada (oculto en la columna 0)
-                    String idHabitacion = modeloTabla.getValueAt(filaSeleccionada, 0).toString();
-
-                    try {
-                        double precio = Double.parseDouble(precioStr);
-
-                        ConexionMySQL conexion = new ConexionMySQL("root", "", "HotelM&L");
-                        conexion.conectar();
-
-                        // Preparamos la consulta para actualizar (UPDATE)
-                        String consulta = "UPDATE habitaciones SET numero = '" + numero + "', tipo = '" + tipo + "', precio = " + precio + ", estado = '" + estado + "' WHERE id = " + idHabitacion;
-                        
-                        int filas = conexion.ejecutarInsertDeleteUpdate(consulta);
-
-                        if (filas > 0) {
-                            JOptionPane.showMessageDialog(panelGesHab, "Habitación modificada correctamente.");
-                            limpiarCampos();
-                            cargarHabitaciones(); // Actualizamos la tabla
-                        } else {
-                            JOptionPane.showMessageDialog(panelGesHab, "Error al modificar la habitación.");
-                        }
-
-                        conexion.desconectar();
-
-                    } catch (NumberFormatException ex) {
-                        JOptionPane.showMessageDialog(panelGesHab, "El precio debe ser un número.");
-                    } catch (SQLException ex) {
-                        JOptionPane.showMessageDialog(panelGesHab, "Error SQL: " + ex.getMessage());
-                    }
-                } else {
-                    // Si no ha seleccionado ninguna fila, le avisamos
-                    JOptionPane.showMessageDialog(panelGesHab, "Por favor, seleccione una habitación de la tabla para modificarla.");
-                }
-            }
-        });
-        */
-
-        //
-        // ACCIÓN DEL BOTÓN: ELIMINAR HABITACIÓN
-        //
-        /* <-- DESCOMENTAR TODO ESTE BLOQUE CUANDO AÑADAS EL BOTÓN EN EL DISEÑADOR
-        btnEliminar.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                int filaSeleccionada = tablaHabitaciones.getSelectedRow();
-                
-                if (filaSeleccionada >= 0) {
-                    // Preguntamos al usuario si está seguro de querer eliminarla
-                    int confirmacion = JOptionPane.showConfirmDialog(panelGesHab, "¿Está seguro de que desea eliminar esta habitación?", "Confirmar Eliminación", JOptionPane.YES_NO_OPTION);
-                    
-                    if (confirmacion == JOptionPane.YES_OPTION) { // Si pulsa "Sí"
-                        String idHabitacion = modeloTabla.getValueAt(filaSeleccionada, 0).toString();
-
-                        try {
-                            ConexionMySQL conexion = new ConexionMySQL("root", "", "HotelM&L");
-                            conexion.conectar();
-
-                            // Preparamos la consulta para borrar (DELETE)
-                            String consulta = "DELETE FROM habitaciones WHERE id = " + idHabitacion;
-                            
-                            int filas = conexion.ejecutarInsertDeleteUpdate(consulta);
-
-                            if (filas > 0) {
-                                JOptionPane.showMessageDialog(panelGesHab, "Habitación eliminada correctamente.");
-                                limpiarCampos();
-                                cargarHabitaciones(); // Actualizamos la tabla
-                            }
-
-                            conexion.desconectar();
-
-                        } catch (SQLException ex) {
-                            JOptionPane.showMessageDialog(panelGesHab, "Error SQL: " + ex.getMessage());
-                        }
-                    }
-                } else {
-                    JOptionPane.showMessageDialog(panelGesHab, "Por favor, seleccione una habitación de la tabla para eliminarla.");
-                }
-            }
-        });
-        */
+        inicializarTabla();
+        configurarComboBoxes();
+        cargarHabitaciones();
+        configurarListeners();
+        actualizarEstadoFormulario(false);
     }
 
     //
-    // MÉTODO PARA LIMPIAR LOS CAMPOS DE TEXTO
+    // MÉTODO PARA PREPARAR LA ESTRUCTURA DE LA TABLA
     //
-    // Un método auxiliar para dejar todo en blanco después de una acción
-    private void limpiarCampos() {
-        geshaNombreW.setText(""); // Vaciamos el texto
-        geshaTipoCo.setSelectedIndex(0); // Volvemos a "Selecciona un tipo..."
-        geshaPrecioW.setText("");
-        geshaEstadoW.setText("");
-        // tablaHabitaciones.clearSelection(); // Desmarcamos la fila de la tabla
+    private void inicializarTabla() {
+        
+        tableModel = new DefaultTableModel() {
+            
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                return false;
+            }
+        };
+
+        tableModel.addColumn("Nº Habitación");
+        tableModel.addColumn("Tipo");
+        tableModel.addColumn("Precio/Noche");
+        tableModel.addColumn("Estado");
+
+        habTablaHabitaciones.setModel(tableModel);
     }
 
     //
-    // MÉTODO PARA CARGAR LOS DATOS EN LA TABLA
+    // MÉTODO PARA CONFIGURAR LOS MENÚS DESPLEGABLES (JCOMBOBOX)
     //
-    // Este método lee la base de datos y dibuja las filas en la tabla
-    /* <-- DESCOMENTAR ESTE MÉTODO CUANDO TENGAS LA TABLA Y LA BASE DE DATOS LISTA
+    private void configurarComboBoxes() {
+        
+        habTipoW.removeAllItems();
+        habEstadoW.removeAllItems();
+        
+        habTipoW.addItem("Individual");
+        habTipoW.addItem("Doble");
+        habTipoW.addItem("Suite");
+        
+        habEstadoW.addItem("Disponible");
+        habEstadoW.addItem("Ocupada");
+        habEstadoW.addItem("Mantenimiento");
+    }
+
+    //
+    // MÉTODO PARA CARGAR LOS DATOS DE LAS HABITACIONES DESDE LA BASE DE DATOS
+    //
     private void cargarHabitaciones() {
-        // Primero, borramos todas las filas que pueda tener la tabla actualmente
-        modeloTabla.setRowCount(0);
+        
+        tableModel.setRowCount(0);
 
+        ConexionMySQL conexion = new ConexionMySQL("root", "", "HotelM&L");
+        
         try {
-            ConexionMySQL conexion = new ConexionMySQL("root", "", "HotelM&L");
             conexion.conectar();
+            
+            // CORRECCIÓN: Se cambia 'Habitacion' (singular) por 'habitaciones' (plural) para que coincida con la BD.
+            String consulta = "SELECT * FROM habitaciones ORDER BY Numero_Hab ASC";
+            
+            ResultSet resultado = conexion.ejecutarSelect(consulta);
 
-            // Pedimos todos los datos de las habitaciones
-            String consulta = "SELECT id, numero, tipo, precio, estado FROM habitaciones";
-            java.sql.ResultSet resultados = conexion.ejecutarSelect(consulta);
-
-            // Recorremos cada fila que nos devuelve la base de datos
-            while (resultados.next()) {
-                // Creamos un array que representará una fila en nuestra tabla
-                Object[] fila = new Object[5];
+            while (resultado.next()) {
                 
-                // Rellenamos el array con los datos de la base de datos
-                fila[0] = resultados.getInt("id");
-                fila[1] = resultados.getString("numero");
-                fila[2] = resultados.getString("tipo");
-                fila[3] = resultados.getDouble("precio");
-                fila[4] = resultados.getString("estado");
-
-                // Añadimos esa fila completa al modelo de nuestra tabla
-                modeloTabla.addRow(fila);
+                String numeroHab = resultado.getString("Numero_Hab");
+                String tipo = resultado.getString("Tipo");
+                double precio = resultado.getDouble("Precio_Noche");
+                String estadoDB = resultado.getString("Estado");
+                
+                String estadoTexto = convertirEstado(estadoDB, true);
+                
+                Object[] fila = {
+                        numeroHab,
+                        tipo,
+                        precio,
+                        estadoTexto
+                };
+                
+                tableModel.addRow(fila);
             }
 
-            conexion.desconectar();
-
-        } catch (SQLException e) {
-            JOptionPane.showMessageDialog(panelGesHab, "Error al cargar los datos: " + e.getMessage(), "Error SQL", JOptionPane.ERROR_MESSAGE);
+        } catch (SQLException ex) {
+            JOptionPane.showMessageDialog(panelGesHab, "Error al cargar las habitaciones: " + ex.getMessage(), "Error de Base de Datos", JOptionPane.ERROR_MESSAGE);
+        } finally {
+            try {
+                conexion.desconectar();
+            } catch (SQLException ex) {
+                System.err.println("Error al cerrar la conexión: " + ex.getMessage());
+            }
         }
     }
-    */
+
+    //
+    // MÉTODO PARA CONFIGURAR TODOS LOS EVENTOS
+    //
+    private void configurarListeners() {
+
+        habTablaHabitaciones.getSelectionModel().addListSelectionListener(new ListSelectionListener() {
+            
+            @Override
+            public void valueChanged(ListSelectionEvent e) {
+                if (!e.getValueIsAdjusting()) {
+                    mostrarDatosDeHabitacionSeleccionada();
+                }
+            }
+        });
+
+        habBtnNuevo.addActionListener(new ActionListener() {
+            
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                prepararFormularioParaNuevaHabitacion();
+            }
+        });
+
+        habBtnGuardar.addActionListener(new ActionListener() {
+            
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                guardarHabitacion();
+            }
+        });
+
+        habBtnEliminar.addActionListener(new ActionListener() {
+            
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                eliminarHabitacion();
+            }
+        });
+    }
+
+    //
+    // MÉTODOS CON LA LÓGICA DE LA APLICACIÓN
+    //
+
+    private void mostrarDatosDeHabitacionSeleccionada() {
+        
+        int filaSeleccionada = habTablaHabitaciones.getSelectedRow();
+
+        if (filaSeleccionada != -1) {
+            
+            actualizarEstadoFormulario(true);
+            
+            habNumeroHabW.setEnabled(false);
+            
+            modoNuevaHabitacion = false;
+
+            habNumeroHabW.setText(tableModel.getValueAt(filaSeleccionada, 0).toString());
+            habTipoW.setSelectedItem(tableModel.getValueAt(filaSeleccionada, 1).toString());
+            habPrecioW.setText(tableModel.getValueAt(filaSeleccionada, 2).toString());
+            habEstadoW.setSelectedItem(tableModel.getValueAt(filaSeleccionada, 3).toString());
+        }
+    }
+
+    private void prepararFormularioParaNuevaHabitacion() {
+        
+        habTablaHabitaciones.clearSelection();
+        
+        actualizarEstadoFormulario(true);
+        
+        habNumeroHabW.setEnabled(true);
+        
+        modoNuevaHabitacion = true;
+
+        habNumeroHabW.setText("");
+        habTipoW.setSelectedIndex(0);
+        habPrecioW.setText("");
+        habEstadoW.setSelectedIndex(0);
+    }
+
+    private void guardarHabitacion() {
+        
+        if (!validarCampos()) {
+            return;
+        }
+
+        if (modoNuevaHabitacion) {
+            insertarNuevaHabitacion();
+        } else {
+            actualizarHabitacionExistente();
+        }
+    }
+
+    private void insertarNuevaHabitacion() {
+        
+        String numeroHab = habNumeroHabW.getText();
+        String tipo = habTipoW.getSelectedItem().toString();
+        String precio = habPrecioW.getText();
+        String estado = convertirEstado(habEstadoW.getSelectedItem().toString(), false);
+        
+        ConexionMySQL conexion = new ConexionMySQL("root", "", "HotelM&L");
+        try {
+            conexion.conectar();
+            
+            // CORRECCIÓN: Se cambia 'Habitacion' (singular) por 'habitaciones' (plural).
+            String consulta = "INSERT INTO habitaciones (Numero_Hab, Tipo, Precio_Noche, Estado) VALUES ('"
+                    + numeroHab + "', '" + tipo + "', " + precio + ", '" + estado + "')";
+            
+            int filasAfectadas = conexion.ejecutarInsertDeleteUpdate(consulta);
+
+            if (filasAfectadas > 0) {
+                JOptionPane.showMessageDialog(panelGesHab, "Habitación guardada con éxito", "Operación completada", JOptionPane.INFORMATION_MESSAGE);
+                
+                cargarHabitaciones();
+                
+                actualizarEstadoFormulario(false);
+                prepararFormularioParaNuevaHabitacion();
+            } else {
+                JOptionPane.showMessageDialog(panelGesHab, "No se pudo guardar la habitación", "Error", JOptionPane.ERROR_MESSAGE);
+            }
+        } catch (SQLException ex) {
+            if (ex.getMessage().contains("Duplicate entry")) {
+                JOptionPane.showMessageDialog(panelGesHab, "Ya existe una habitación con ese número", "Error de duplicado", JOptionPane.ERROR_MESSAGE);
+            } else {
+                JOptionPane.showMessageDialog(panelGesHab, "Error al guardar la habitación: " + ex.getMessage(), "Error de Base de Datos", JOptionPane.ERROR_MESSAGE);
+            }
+        } finally {
+            try { conexion.desconectar(); } catch (SQLException ex) { System.err.println("Error al cerrar la conexión."); }
+        }
+    }
+
+    private void actualizarHabitacionExistente() {
+        
+        String numeroHab = habNumeroHabW.getText();
+        String tipo = habTipoW.getSelectedItem().toString();
+        String precio = habPrecioW.getText();
+        String estado = convertirEstado(habEstadoW.getSelectedItem().toString(), false);
+        
+        ConexionMySQL conexion = new ConexionMySQL("root", "", "HotelM&L");
+        try {
+            conexion.conectar();
+            
+            // CORRECCIÓN: Se cambia 'Habitacion' (singular) por 'habitaciones' (plural).
+            String consulta = "UPDATE habitaciones SET "
+                    + "Tipo = '" + tipo + "', "
+                    + "Precio_Noche = " + precio + ", "
+                    + "Estado = '" + estado + "' "
+                    + "WHERE Numero_Hab = '" + numeroHab + "'";
+            
+            int filasAfectadas = conexion.ejecutarInsertDeleteUpdate(consulta);
+
+            if (filasAfectadas > 0) {
+                JOptionPane.showMessageDialog(panelGesHab, "Habitación actualizada con éxito", "Operación completada", JOptionPane.INFORMATION_MESSAGE);
+                
+                cargarHabitaciones();
+                
+                actualizarEstadoFormulario(false);
+            } else {
+                JOptionPane.showMessageDialog(panelGesHab, "No se pudo actualizar la habitación. Puede que ya no exista.", "Error", JOptionPane.ERROR_MESSAGE);
+            }
+        } catch (SQLException ex) {
+            JOptionPane.showMessageDialog(panelGesHab, "Error al actualizar la habitación: " + ex.getMessage(), "Error de Base de Datos", JOptionPane.ERROR_MESSAGE);
+        } finally {
+            try { conexion.desconectar(); } catch (SQLException ex) { System.err.println("Error al cerrar la conexión."); }
+        }
+    }
+
+    private void eliminarHabitacion() {
+        
+        int filaSeleccionada = habTablaHabitaciones.getSelectedRow();
+
+        if (filaSeleccionada == -1) {
+            JOptionPane.showMessageDialog(panelGesHab, "Por favor, seleccione una habitación de la tabla para eliminarla", "Ninguna habitación seleccionada", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        int confirmacion = JOptionPane.showConfirmDialog(panelGesHab, "¿Estás seguro de que quieres eliminar esta habitación? Esta acción no se puede deshacer.", "Confirmar eliminación", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
+
+        if (confirmacion == JOptionPane.YES_OPTION) {
+            
+            String numeroHab = habNumeroHabW.getText();
+
+            ConexionMySQL conexion = new ConexionMySQL("root", "", "HotelM&L");
+            try {
+                conexion.conectar();
+                
+                // CORRECCIÓN: Se cambia 'Habitacion' (singular) por 'habitaciones' (plural).
+                String consulta = "DELETE FROM habitaciones WHERE Numero_Hab = '" + numeroHab + "'";
+                
+                int filasAfectadas = conexion.ejecutarInsertDeleteUpdate(consulta);
+
+                if (filasAfectadas > 0) {
+                    JOptionPane.showMessageDialog(panelGesHab, "Habitación eliminada con éxito", "Operación completada", JOptionPane.INFORMATION_MESSAGE);
+                    
+                    cargarHabitaciones();
+                    
+                    actualizarEstadoFormulario(false);
+                    prepararFormularioParaNuevaHabitacion();
+                } else {
+                    JOptionPane.showMessageDialog(panelGesHab, "No se pudo eliminar la habitación. Puede que ya haya sido eliminada.", "Error", JOptionPane.ERROR_MESSAGE);
+                }
+            } catch (SQLException ex) {
+                if (ex.getMessage().contains("foreign key constraint")) {
+                    JOptionPane.showMessageDialog(panelGesHab, "No se puede eliminar la habitación porque tiene reservas activas o pasadas.", "Error de integridad", JOptionPane.ERROR_MESSAGE);
+                } else {
+                    JOptionPane.showMessageDialog(panelGesHab, "Error al eliminar la habitación: " + ex.getMessage(), "Error de Base de Datos", JOptionPane.ERROR_MESSAGE);
+                }
+            } finally {
+                try { conexion.desconectar(); } catch (SQLException ex) { System.err.println("Error al cerrar la conexión."); }
+            }
+        }
+    }
+
+    //
+    // MÉTODO CENTRAL DE VALIDACIÓN
+    //
+    private boolean validarCampos() {
+        
+        String numeroHab = habNumeroHabW.getText();
+        String precio = habPrecioW.getText();
+
+        if (numeroHab.isEmpty() || precio.isEmpty()) {
+            JOptionPane.showMessageDialog(panelGesHab, "Los campos Nº Habitación y Precio son obligatorios", "Campos requeridos", JOptionPane.WARNING_MESSAGE);
+            return false;
+        }
+        
+        try {
+            Double.parseDouble(precio);
+        } catch (NumberFormatException e) {
+            JOptionPane.showMessageDialog(panelGesHab, "El precio solo puede contener números (use un punto para los decimales).", "Dato incorrecto", JOptionPane.WARNING_MESSAGE);
+            return false;
+        }
+
+        return true;
+    }
+
+    //
+    // MÉTODO UTILITARIO PARA CONVERTIR ESTADOS
+    //
+    private String convertirEstado(String estado, boolean aTexto) {
+        if (aTexto) {
+            switch (estado) {
+                case "D": return "Disponible";
+                case "O": return "Ocupada";
+                case "M": return "Mantenimiento";
+                default: return "Desconocido";
+            }
+        } else {
+            switch (estado) {
+                case "Disponible": return "D";
+                case "Ocupada": return "O";
+                case "Mantenimiento": return "M";
+                default: return "";
+            }
+        }
+    }
+
+    //
+    // MÉTODO UTILITARIO PARA CONTROLAR LA INTERFAZ
+    //
+    private void actualizarEstadoFormulario(boolean activado) {
+        habNumeroHabW.setEnabled(activado);
+        habTipoW.setEnabled(activado);
+        habPrecioW.setEnabled(activado);
+        habEstadoW.setEnabled(activado);
+        habBtnGuardar.setEnabled(activado);
+        habBtnEliminar.setEnabled(activado);
+    }
 }

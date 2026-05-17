@@ -1,89 +1,112 @@
-package Frames; // Indica que esta clase pertenece al paquete "Frames"
+// La primera línea de un archivo Java siempre define a qué "paquete" o carpeta pertenece la clase.
+package Frames;
 
-import Conexion.ConexionMySQL; // Importa la clase de conexión para poder hablar con la base de datos
-import javax.swing.*; // Importa las clases de Swing para la interfaz gráfica
-import java.awt.event.ActionEvent; // Importa la clase para eventos de acción
-import java.awt.event.ActionListener; // Importa la interfaz para "escuchar" esos eventos
-import java.sql.ResultSet; // Importa la clase para manejar los resultados de una consulta
-import java.sql.SQLException; // Importa la clase para manejar errores de SQL
-import java.util.regex.Pattern; // Importa la clase para trabajar con expresiones regulares
+//
+// ZONA DE IMPORTACIONES
+//
+// Aquí le decimos a nuestra clase qué herramientas o "librerías" externas necesita para funcionar.
+import Conexion.ConexionMySQL;
+import javax.swing.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.regex.Pattern;
 
-// Esta clase gestiona la ventana de inicio de sesión para los administradores del sistema
-public class LoginPage { // Define el inicio de la clase
-
-    //
-    // DECLARACIÓN DE COMPONENTES VISUALES
-    //
-    private JTextField logDNIW; // El campo para que el administrador escriba su DNI
-    private JPasswordField logPasswordW; // El campo para que el administrador escriba su contraseña
-    private JButton logBtnIniciarSesion; // El botón para intentar el inicio de sesión
-    private JButton logRegBtn; // El botón que lleva a la ventana de registro
-    public JPanel pantallaLogin; // El panel principal que contiene todo
+// Esta clase define todo el comportamiento y la lógica de nuestra ventana de inicio de sesión.
+public class LoginPage {
 
     //
-    // CONSTRUCTOR Y LÓGICA DE BOTONES
+    // DECLARACIÓN DE COMPONENTES VISUALES (ATRIBUTOS DE LA CLASE)
     //
-    public LoginPage() { // Define el inicio del constructor
+    // Aquí declaramos las variables que representan a cada uno de los componentes del formulario.
+    private JTextField logDNIW;
+    private JPasswordField logPasswordW;
+    private JButton logBtnIniciarSesion;
+    private JButton logRegBtn;
+    public JPanel pantallaLogin;
+
+    //
+    // CONSTRUCTOR DE LA CLASE
+    //
+    // Es el método que se ejecuta al crear la ventana. Su misión es preparar los componentes.
+    public LoginPage() {
 
         //
         // LÓGICA DEL BOTÓN DE INICIO DE SESIÓN
         //
-        logBtnIniciarSesion.addActionListener(new ActionListener() { // Asigna un "oyente" de acciones al botón
+        // Le decimos al botón de iniciar sesión qué debe hacer cuando un usuario le haga clic.
+        logBtnIniciarSesion.addActionListener(new ActionListener() {
 
-            @Override // Indica que estamos sobrescribiendo un método
-            public void actionPerformed(ActionEvent e) { // Define el método que se ejecutará con el clic
+            // Este método se dispara justo cuando el usuario pulsa el botón.
+            @Override
+            public void actionPerformed(ActionEvent e) {
 
-                // Se recoge el texto que el administrador ha introducido en los campos
-                String dni = logDNIW.getText(); // Obtiene el texto del campo del DNI
-                String contrasena = new String(logPasswordW.getPassword()); // Obtiene la contraseña
+                // Recogemos el texto que el administrador ha introducido en los campos.
+                String dni = logDNIW.getText();
+                String contrasena = new String(logPasswordW.getPassword());
 
                 //
                 // BLOQUE DE VALIDACIONES RÁPIDAS
                 //
-                if (dni.isEmpty() || contrasena.isEmpty()) { // Comprueba si alguno de los campos está vacío
+                // Antes de consultar la base de datos, hacemos unas comprobaciones básicas.
+                
+                // ¿Ha dejado el administrador alguno de los campos en blanco?
+                if (dni.isEmpty() || contrasena.isEmpty()) {
                     JOptionPane.showMessageDialog(pantallaLogin, "Por favor, rellene todos los campos", "Error", JOptionPane.ERROR_MESSAGE);
-                    return; // Detiene la ejecución del método
+                    // Detenemos la ejecución aquí para no continuar.
+                    return;
                 }
 
-                if (!esDniValido(dni)) { // Llama a nuestro método de validación de DNI
+                // ¿Tiene el DNI un formato que no es válido?
+                if (!esDniValido(dni)) {
                     JOptionPane.showMessageDialog(pantallaLogin, "El formato del DNI no es válido", "Dato incorrecto", JOptionPane.WARNING_MESSAGE);
-                    return; // Detiene el método
+                    return;
                 }
 
                 //
                 // BLOQUE DE CONEXIÓN A LA BASE DE DATOS
                 //
+                // Si los formatos son correctos, ahora sí, verificamos si el administrador existe.
                 ConexionMySQL conexion = new ConexionMySQL("root", "", "HotelM&L");
-                try { // Se inicia un bloque para manejar posibles errores de base de datos
-                    conexion.conectar(); // Llama al método para conectar
+                try {
+                    conexion.conectar();
 
-                    // Se prepara la consulta para buscar un administrador con ESE DNI Y ESA contraseña
+                    // Preparamos la consulta para buscar un administrador con ese DNI y esa contraseña.
                     String consulta = "SELECT * FROM Administradores WHERE DNI = '" + dni + "' AND Contrasena = '" + contrasena + "'";
                     
-                    ResultSet resultado = conexion.ejecutarSelect(consulta); // Ejecuta la consulta
+                    // Ejecutamos la consulta y guardamos el resultado.
+                    ResultSet resultado = conexion.ejecutarSelect(consulta);
 
-                    if (resultado.next()) { // Si ".next()" devuelve "true", es que los datos son correctos
+                    // El método .next() intenta moverse a la primera fila del resultado.
+                    // Si devuelve 'true', es que se encontró una coincidencia y los datos son correctos.
+                    if (resultado.next()) {
                         JOptionPane.showMessageDialog(pantallaLogin, "¡Inicio de sesión correcto!");
 
-                        JFrame frame = (JFrame) SwingUtilities.getWindowAncestor(pantallaLogin); // Obtiene la ventana actual
-                        frame.dispose(); // La cierra
+                        // Cerramos la ventana de login.
+                        JFrame frame = (JFrame) SwingUtilities.getWindowAncestor(pantallaLogin);
+                        frame.dispose();
 
-                        JFrame mainFrame = new JFrame("Panel Principal de Gestión"); // Crea la nueva ventana
-                        mainFrame.setContentPane(new mainFrame().panelMain); // Le asigna el panel principal
-                        mainFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE); // Define el comportamiento de cierre
-                        mainFrame.pack(); // Ajusta su tamaño
-                        mainFrame.setLocationRelativeTo(null); // La centra en la pantalla
-                        mainFrame.setVisible(true); // La hace visible
+                        // Y abrimos la ventana principal de la aplicación.
+                        JFrame mainFrame = new JFrame("Panel Principal de Gestión");
+                        mainFrame.setContentPane(new mainFrame().panelMain);
+                        mainFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+                        mainFrame.pack();
+                        mainFrame.setLocationRelativeTo(null);
+                        mainFrame.setVisible(true);
 
-                    } else { // Si ".next()" es "false", no se encontró ninguna coincidencia
+                    } else {
+                        // Si .next() devuelve 'false', no se encontró ningún administrador con esos datos.
                         JOptionPane.showMessageDialog(pantallaLogin, "DNI o contraseña incorrectos", "Error de inicio de sesión", JOptionPane.ERROR_MESSAGE);
                     }
-                } catch (SQLException ex) { // Si algo falla durante la conexión o la consulta
+                } catch (SQLException ex) {
+                    // Si algo falla durante la conexión o la consulta, informamos al usuario.
                     JOptionPane.showMessageDialog(pantallaLogin, "Error con la base de datos: " + ex.getMessage(), "Error de Conexión", JOptionPane.ERROR_MESSAGE);
-                } finally { // Al final de todo, sin importar si hubo éxito o error
-                    try { // Se asegura de cerrar la conexión
-                        conexion.desconectar(); // Llama al método para cerrar la conexión
-                    } catch (SQLException ex) { // Si el cierre también falla
+                } finally {
+                    // Al final de todo, nos aseguramos de cerrar la conexión.
+                    try {
+                        conexion.desconectar();
+                    } catch (SQLException ex) {
                         System.err.println("Error al cerrar la conexión: " + ex.getMessage());
                     }
                 }
@@ -93,15 +116,18 @@ public class LoginPage { // Define el inicio de la clase
         //
         // LÓGICA DEL BOTÓN DE REGISTRO DE ADMINISTRADORES
         //
-        logRegBtn.addActionListener(new ActionListener() { // Asigna un "oyente" al botón
-            @Override // Sobrescribe el método
-            public void actionPerformed(ActionEvent e) { // Define lo que pasa al hacer clic
-                JFrame registroFrame = new JFrame("Registro de Nuevo Administrador"); // Crea la nueva ventana
-                registroFrame.setContentPane(new RegistroPage().pantallaRegistro); // Le asigna el panel de la clase RegistroPage
-                registroFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE); // Hace que solo se cierre esta ventana
-                registroFrame.pack(); // Ajusta el tamaño
-                registroFrame.setLocationRelativeTo(null); // La centra
-                registroFrame.setVisible(true); // La hace visible
+        // Le decimos al botón de registro qué debe hacer cuando un usuario le haga clic.
+        logRegBtn.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                // Al hacer clic, simplemente creamos y mostramos la ventana de Registro de Administradores.
+                JFrame registroFrame = new JFrame("Registro de Nuevo Administrador");
+                registroFrame.setContentPane(new RegistroPage().pantallaRegistro);
+                // DISPOSE_ON_CLOSE hace que al cerrar la ventana de registro, no se cierre también la de login.
+                registroFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+                registroFrame.pack();
+                registroFrame.setLocationRelativeTo(null);
+                registroFrame.setVisible(true);
             }
         });
     }
@@ -109,7 +135,8 @@ public class LoginPage { // Define el inicio de la clase
     //
     // MÉTODO DE VALIDACIÓN (HERRAMIENTA)
     //
-    private boolean esDniValido(String dni) { // Comprueba el formato del DNI
+    // Un método de ayuda para comprobar el formato del DNI.
+    private boolean esDniValido(String dni) {
         return dni.toUpperCase().matches("\\d{8}[A-Z]");
     }
 }

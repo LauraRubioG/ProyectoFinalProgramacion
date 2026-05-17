@@ -1,105 +1,114 @@
-package Frames; // Indica que esta clase pertenece al paquete "Frames"
+// La primera línea de un archivo Java siempre define a qué "paquete" o carpeta pertenece la clase.
+package Frames;
 
-import Conexion.ConexionMySQL; // Importa la clase de conexión para poder hablar con la base de datos
-import javax.swing.*; // Importa las clases de Swing para la interfaz gráfica
-import java.awt.event.ActionEvent; // Importa la clase para eventos de acción
-import java.awt.event.ActionListener; // Importa la interfaz para "escuchar" esos eventos
-import java.sql.SQLException; // Importa la clase para manejar errores de SQL
-import java.util.regex.Pattern; // Importa la clase para trabajar con expresiones regulares
+//
+// ZONA DE IMPORTACIONES
+//
+// Aquí le decimos a nuestra clase qué herramientas o "librerías" externas necesita para funcionar.
+import Conexion.ConexionMySQL;
+import javax.swing.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.sql.SQLException;
+import java.util.regex.Pattern;
 
-// Esta clase se encarga de toda la funcionalidad de la ventana de registro de nuevos administradores
-public class RegistroPage { // Define el inicio de la clase
+// Esta clase define todo el comportamiento y la lógica de nuestra ventana de registro de administradores.
+public class RegistroPage {
 
     //
-    // DECLARACIÓN DE COMPONENTES VISUALES
+    // DECLARACIÓN DE COMPONENTES VISUALES (ATRIBUTOS DE LA CLASE)
     //
-    // Se elimina la variable regCredencialW que ya no existe en el formulario
-
-    private JTextField regDNIW; // Campo para el DNI
-    private JTextField regNombreW; // Campo para el nombre
-    private JTextField regApellidosW; // Campo para los apellidos
-    private JTextField regEmailW; // Campo para el email
-    private JTextField regTelefonoW; // Campo para el teléfono
-    private JTextField regDireccionW; // Campo para la calle
-    private JTextField regCiudadW; // Campo para la ciudad
-    private JTextField regCodigoPostalW; // Campo para el código postal
-    private JPasswordField regContrasenaW; // Campo para la contraseña
-    private JPasswordField regClaveMaestraW; // Campo para la clave de registro secreta
-    private JButton regBtn; // El botón para registrar al nuevo administrador
-    public JPanel pantallaRegistro; // El panel principal que contiene todo
+    // Aquí declaramos las variables que representan a cada uno de los componentes del formulario.
+    private JTextField regDNIW;
+    private JTextField regNombreW;
+    private JTextField regApellidosW;
+    private JTextField regEmailW;
+    private JTextField regTelefonoW;
+    private JTextField regDireccionW;
+    private JTextField regCiudadW;
+    private JTextField regCodigoPostalW;
+    private JPasswordField regContrasenaW;
+    private JPasswordField regClaveMaestraW;
+    private JButton regBtn;
+    public JPanel pantallaRegistro;
 
     //
     // CONSTRUCTOR DE LA CLASE
     //
-    public RegistroPage() { // Define el inicio del constructor
-
-        // Se le asigna una tarea al botón de registrar para cuando el usuario haga clic
-        regBtn.addActionListener(new ActionListener() { // Asigna un "oyente" de acciones al botón
-
-            @Override // Indica que estamos sobrescribiendo un método
-            public void actionPerformed(ActionEvent e) { // Define el método que se ejecutará con el clic
-
-                // Se llama al método que procesa el registro
-                procesarRegistroAdministrador(); // Llama al método que hace el trabajo
-            } // Cierra el método actionPerformed
-        }); // Cierra la definición del ActionListener
-    } // Cierra el constructor
+    // Es el método que se ejecuta al crear la ventana. Su misión es preparar los componentes.
+    public RegistroPage() {
+        
+        // Le decimos al botón de registrar qué debe hacer cuando un usuario le haga clic.
+        // El método .addActionListener() es como "ponerle una oreja" al botón para que escuche los clics.
+        regBtn.addActionListener(new ActionListener() {
+            
+            // Este método se dispara justo cuando el usuario pulsa el botón.
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                // Para mantener el código organizado, llamamos a un método separado que hace todo el trabajo.
+                procesarRegistroAdministrador();
+            }
+        });
+    }
 
     //
     // MÉTODO PARA PROCESAR EL REGISTRO DE UN NUEVO ADMINISTRADOR
     //
-    private void procesarRegistroAdministrador() { // Define el inicio del método
+    // Aquí se realizan las validaciones y la inserción en la tabla "Administradores".
+    private void procesarRegistroAdministrador() {
 
-        // Se recoge el texto de los campos del formulario
-        // Se elimina la línea que recogía la credencial
-        String dni = regDNIW.getText(); // Obtiene el DNI
-        String nombre = regNombreW.getText(); // Obtiene el nombre
-        String apellidos = regApellidosW.getText(); // Obtiene los apellidos
-        String email = regEmailW.getText(); // Obtiene el email
-        String telefono = regTelefonoW.getText(); // Obtiene el teléfono
-        String direccion = regDireccionW.getText(); // Obtiene la dirección
-        String ciudad = regCiudadW.getText(); // Obtiene la ciudad
-        String codigoPostal = regCodigoPostalW.getText(); // Obtiene el código postal
-        String contrasena = new String(regContrasenaW.getPassword()); // Obtiene la contraseña
-        String claveMaestra = new String(regClaveMaestraW.getPassword()); // Obtiene la clave de registro
+        // Primero, recogemos el texto que el usuario ha escrito en cada campo.
+        String dni = regDNIW.getText();
+        String nombre = regNombreW.getText();
+        String apellidos = regApellidosW.getText();
+        String email = regEmailW.getText();
+        String telefono = regTelefonoW.getText();
+        String direccion = regDireccionW.getText();
+        String ciudad = regCiudadW.getText();
+        String codigoPostal = regCodigoPostalW.getText();
+        // Para los JPasswordField, se usa .getPassword() que devuelve un array de caracteres por seguridad.
+        // Lo convertimos a String para poder usarlo.
+        String contrasena = new String(regContrasenaW.getPassword());
+        String claveMaestra = new String(regClaveMaestraW.getPassword());
 
         //
         // BLOQUE DE VALIDACIONES DE DATOS
         //
         
-        // 1. Se valida la clave de registro secreta
-        if (!claveMaestra.equals("HotelM&L2026")) { // Compara la clave introducida con la clave correcta
+        // 1. Validamos la clave de registro secreta. Es la primera barrera de seguridad.
+        // El método .equals() es la forma correcta de comparar si dos Strings son idénticos.
+        if (!claveMaestra.equals("HotelM&L2026")) {
             JOptionPane.showMessageDialog(pantallaRegistro, "La clave de registro es incorrecta", "Acceso denegado", JOptionPane.ERROR_MESSAGE);
-            return; // Detiene el método inmediatamente si la clave es incorrecta
+            // Si la clave es incorrecta, detenemos todo el proceso aquí.
+            return;
         }
 
-        // 2. Se comprueba que los datos obligatorios no estén vacíos
-        // Se elimina la credencial de la comprobación
-        if (dni.isEmpty() || nombre.isEmpty() || contrasena.isEmpty()) { // Comprueba los campos NOT NULL de la BD
+        // 2. Comprobamos que los datos obligatorios (los que en la BD no pueden ser NULL) no estén vacíos.
+        if (dni.isEmpty() || nombre.isEmpty() || contrasena.isEmpty()) {
             JOptionPane.showMessageDialog(pantallaRegistro, "Los campos DNI, Nombre y Contraseña son obligatorios", "Campos incompletos", JOptionPane.WARNING_MESSAGE);
-            return; // Detiene el método
+            return;
         }
 
-        // 3. Se realizan otras validaciones de formato
-        if (!esDniValido(dni)) { // Valida el formato del DNI
+        // 3. Realizamos otras validaciones de formato usando nuestros métodos de ayuda.
+        if (!esDniValido(dni)) {
             JOptionPane.showMessageDialog(pantallaRegistro, "El formato del DNI no es válido (debe ser 8 números y 1 letra)", "Dato incorrecto", JOptionPane.WARNING_MESSAGE);
-            return; // Detiene el método
+            return;
         }
 
-        if (!email.isEmpty() && !esEmailValido(email)) { // Si el email no está vacío, valida su formato
+        // El email es opcional, así que solo lo validamos si el usuario ha escrito algo.
+        if (!email.isEmpty() && !esEmailValido(email)) {
             JOptionPane.showMessageDialog(pantallaRegistro, "El formato del email no es válido", "Dato incorrecto", JOptionPane.WARNING_MESSAGE);
-            return; // Detiene el método
+            return;
         }
 
         //
         // BLOQUE DE INSERCIÓN EN LA BASE DE DATOS
         //
-        ConexionMySQL conexion = new ConexionMySQL("root", "", "HotelM&L"); // Crea el objeto de conexión
-        try { // Inicia el bloque para manejar errores de base de datos
-            conexion.conectar(); // Conecta a la base de datos
+        ConexionMySQL conexion = new ConexionMySQL("root", "", "HotelM&L");
+        try {
+            conexion.conectar();
 
-            // Se prepara la instrucción SQL para insertar un nuevo registro en la tabla "Administradores"
-            // Se elimina la columna Credencial_Empleado de la consulta
+            // Preparamos la instrucción SQL para insertar un nuevo registro.
             String consulta = "INSERT INTO Administradores (DNI, Nombre, Apellidos, Email, Telefono, Direccion_Calle, Direccion_Ciudad, Direccion_CP, Contrasena) VALUES ('"
                     + dni + "', '"
                     + nombre + "', '"
@@ -111,27 +120,34 @@ public class RegistroPage { // Define el inicio de la clase
                     + codigoPostal + "', '"
                     + contrasena + "')";
 
-            int filasAfectadas = conexion.ejecutarInsertDeleteUpdate(consulta); // Ejecuta la inserción
+            // Ejecutamos la consulta. El método devuelve el número de filas que se han insertado.
+            int filasAfectadas = conexion.ejecutarInsertDeleteUpdate(consulta);
 
-            if (filasAfectadas > 0) { // Si es mayor que cero, todo fue bien
+            // Si se ha insertado al menos una fila, la operación fue un éxito.
+            if (filasAfectadas > 0) {
                 JOptionPane.showMessageDialog(pantallaRegistro, "Administrador registrado con éxito", "Registro completado", JOptionPane.INFORMATION_MESSAGE);
                 
-                JFrame frame = (JFrame) SwingUtilities.getWindowAncestor(pantallaRegistro); // Obtiene la ventana actual
-                frame.dispose(); // La cierra
+                // Cerramos la ventana de registro para volver a la de login.
+                // SwingUtilities.getWindowAncestor() es una forma de obtener la ventana (JFrame) que contiene nuestro panel.
+                JFrame frame = (JFrame) SwingUtilities.getWindowAncestor(pantallaRegistro);
+                // .dispose() cierra la ventana y libera los recursos que estaba usando.
+                frame.dispose();
                 
-            } else { // Si no se afectó ninguna fila
+            } else {
                 JOptionPane.showMessageDialog(pantallaRegistro, "No se pudo registrar al administrador", "Error de registro", JOptionPane.ERROR_MESSAGE);
             }
 
-        } catch (SQLException ex) { // Si ocurre un error de SQL
-            if (ex.getMessage().contains("Duplicate entry")) { // Comprueba el mensaje de error
+        } catch (SQLException ex) {
+            // Si el error de SQL contiene "Duplicate entry", es porque una clave única (DNI o Email) se está repitiendo.
+            if (ex.getMessage().contains("Duplicate entry")) {
                 JOptionPane.showMessageDialog(pantallaRegistro, "El DNI o el Email ya existen en la base de datos", "Error de duplicado", JOptionPane.ERROR_MESSAGE);
-            } else { // Para cualquier otro error
+            } else {
+                // Para cualquier otro error, mostramos el mensaje que nos da la base de datos.
                 JOptionPane.showMessageDialog(pantallaRegistro, "Error con la base de datos: " + ex.getMessage(), "Error de Conexión", JOptionPane.ERROR_MESSAGE);
             }
-        } finally { // Al final, siempre se cierra la conexión
+        } finally {
             try {
-                conexion.desconectar(); // Cierra la conexión
+                conexion.desconectar();
             } catch (SQLException ex) {
                 System.err.println("Error al cerrar la conexión: " + ex.getMessage());
             }
@@ -141,16 +157,25 @@ public class RegistroPage { // Define el inicio de la clase
     //
     // MÉTODOS DE VALIDACIÓN (HERRAMIENTAS)
     //
-    private boolean esDniValido(String dni) { // Comprueba el formato del DNI
+    // Estos métodos nos ayudan a comprobar si un texto tiene un formato específico.
+    
+    // Comprueba si un DNI tiene 8 números y una letra.
+    private boolean esDniValido(String dni) {
+        // .toUpperCase() convierte la letra a mayúscula para que la validación no falle.
+        // .matches() comprueba si el texto encaja con el patrón de la expresión regular.
         return dni.toUpperCase().matches("\\d{8}[A-Z]");
     }
 
-    private boolean esEmailValido(String email) { // Comprueba el formato del email
+    // Comprueba si un email tiene un formato estándar.
+    private boolean esEmailValido(String email) {
+        // Esta es una expresión regular estándar para validar emails.
         String patronEmail = "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,6}$";
+        // Comparamos el email del usuario con este patrón.
         return Pattern.compile(patronEmail).matcher(email).matches();
     }
     
-    private void createUIComponents() { // Método autogenerado por Swing
-        // No se necesita por ahora
+    // Método autogenerado por el diseñador de Swing. No lo usamos por ahora.
+    private void createUIComponents() {
+
     }
 }
