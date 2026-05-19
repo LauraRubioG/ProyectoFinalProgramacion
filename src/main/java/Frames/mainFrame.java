@@ -61,15 +61,27 @@ public class mainFrame {
         btnGestionReservas.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                JOptionPane.showMessageDialog(panelMain, "Funcionalidad en desarrollo", "Aviso", JOptionPane.INFORMATION_MESSAGE);
+                // Al hacer clic, creamos y mostramos la ventana para gestionar las reservas.
+                JFrame gestionReservasFrame = new JFrame("Gestión de Reservas");
+                gestionReservasFrame.setContentPane(new Reservas().panelReservas);
+                gestionReservasFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+                gestionReservasFrame.pack();
+                gestionReservasFrame.setLocationRelativeTo(null);
+                gestionReservasFrame.setVisible(true);
             }
         });
 
-        // Y para el botón de "Realizar Check-in".
+        // Y finalmente, para el botón de "Realizar Check-in".
         btnCheckIn.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                JOptionPane.showMessageDialog(panelMain, "Funcionalidad en desarrollo", "Aviso", JOptionPane.INFORMATION_MESSAGE);
+                // Al hacer clic, creamos y mostramos la ventana para realizar el check-in.
+                JFrame checkinFrame = new JFrame("Realizar Check-in");
+                checkinFrame.setContentPane(new CheckinPage().CheckinPage);
+                checkinFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+                checkinFrame.pack();
+                checkinFrame.setLocationRelativeTo(null);
+                checkinFrame.setVisible(true);
             }
         });
     }
